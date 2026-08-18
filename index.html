@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crucigrama Diario | Estilo La Voz & Agilmente</title>
+    <link rel="stylesheet" href="css/styles.css?v=2.3">
+</head>
+<body>
+
+    <!-- Canvas para efectos de confeti al ganar -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Encabezado Principal estilo La Voz / Agilmente -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo-area">
+                <div class="logo-badge">🧩</div>
+                <div>
+                    <h1>Crucigrama Diario</h1>
+                    <div class="daily-date" id="daily-date-display">Cargando fecha...</div>
+                </div>
+            </div>
+
+            <!-- Marcador y Racha -->
+            <div class="header-stats">
+                <div class="streak-badge" title="Racha de días consecutivos completando crucigramas">
+                    <span>Racha:</span>
+                    <span id="streak-display">0 🔥</span>
+                </div>
+
+                <div class="game-meta">
+                    <div class="meta-box">
+                        <span class="label">Puntos</span>
+                        <span class="value" id="score-display">0</span>
+                    </div>
+                    <div class="meta-box">
+                        <span class="label">Tiempo</span>
+                        <span class="value" id="timer-display">00:00</span>
+                    </div>
+                </div>
+
+                <button id="btn-sound-toggle" class="btn btn-secondary" title="Activar/desactivar efectos de sonido">🔊 Sonido</button>
+                <button id="btn-stats" class="btn btn-secondary" title="Ver Estadísticas y Récords">🏆 Récords</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Selector de Retos Diarios (Máximo 2 por día) -->
+    <section class="daily-slots-bar">
+        <div class="slots-container">
+            <div class="slots-tabs">
+                <button id="btn-slot-1" class="tab-slot tab-active">
+                    <span>🧩 Reto Diario #1</span>
+                    <small class="badge-pending">Pendiente</small>
+                </button>
+                <button id="btn-slot-2" class="tab-slot">
+                    <span>🧩 Reto Diario #2</span>
+                    <small class="badge-pending">Pendiente</small>
+                </button>
+                <button id="btn-reset-slot" class="btn btn-secondary" style="font-size: 0.78rem; padding: 4px 8px;" title="Reiniciar este reto desde cero">🔄 Reiniciar</button>
+            </div>
+            <div class="daily-limit-info">
+                📅 <strong>2 Desafíos por día</strong> con renovación automática a medianoche
+            </div>
+        </div>
+
+        <!-- Banner de Felicitaciones cuando completa los 2 retos del día -->
+        <div id="daily-completed-banner" class="daily-completed-banner hidden">
+            <div>
+                <strong>🎉 ¡Completaste todos los retos de hoy! (2/2)</strong>
+                <div>Vuelve mañana para dos nuevos crucigramas diarios.</div>
+            </div>
+            <div>
+                Próximos retos en: <span id="midnight-countdown" class="countdown-box">--:--:--</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Barra Superior de Pista Activa (Formato: '1H: Quebrantar la ley de Dios.') -->
+    <section class="active-clue-banner">
+        <div class="active-clue-content" id="active-clue-text">
+            <em>Selecciona una casilla para ver su pista</em>
+        </div>
+    </section>
+
+    <!-- Área de Juego (Layout de 3 Columnas: [Tablero] [Horizontales] [Verticales]) -->
+    <main class="main-container" id="game-area">
+        <!-- Columna 1: Tablero y Herramientas -->
+        <section class="board-wrapper">
+            <div class="crossword-grid" id="crossword-grid">
+                <!-- Se genera dinámicamente -->
+            </div>
+
+            <!-- Botones de Asistencia y Verificación -->
+            <div class="board-actions">
+                <button id="btn-check" class="btn-tool" title="Comprueba si hay errores en lo que has escrito">
+                    🔍 Comprobar
+                </button>
+                <button id="btn-reveal-letter" class="btn-tool" title="Revela la letra de la casilla activa (-25 pts)">
+                    💡 Casilla
+                </button>
+                <button id="btn-reveal-word" class="btn-tool" title="Revela la palabra activa completa (-100 pts)">
+                    📖 Palabra
+                </button>
+            </div>
+
+            <!-- Teclado Virtual para Dispositivos Móviles / Táctiles -->
+            <div class="virtual-keyboard" id="virtual-keyboard">
+                <div class="kb-row">
+                    <button class="key-btn" data-key="Q">Q</button>
+                    <button class="key-btn" data-key="W">W</button>
+                    <button class="key-btn" data-key="E">E</button>
+                    <button class="key-btn" data-key="R">R</button>
+                    <button class="key-btn" data-key="T">T</button>
+                    <button class="key-btn" data-key="Y">Y</button>
+                    <button class="key-btn" data-key="U">U</button>
+                    <button class="key-btn" data-key="I">I</button>
+                    <button class="key-btn" data-key="O">O</button>
+                    <button class="key-btn" data-key="P">P</button>
+                </div>
+                <div class="kb-row">
+                    <button class="key-btn" data-key="A">A</button>
+                    <button class="key-btn" data-key="S">S</button>
+                    <button class="key-btn" data-key="D">D</button>
+                    <button class="key-btn" data-key="F">F</button>
+                    <button class="key-btn" data-key="G">G</button>
+                    <button class="key-btn" data-key="H">H</button>
+                    <button class="key-btn" data-key="J">J</button>
+                    <button class="key-btn" data-key="K">K</button>
+                    <button class="key-btn" data-key="L">L</button>
+                    <button class="key-btn" data-key="Ñ">Ñ</button>
+                </div>
+                <div class="kb-row">
+                    <button class="key-btn key-wide" data-key="SWITCH">🔄 Giro</button>
+                    <button class="key-btn" data-key="Z">Z</button>
+                    <button class="key-btn" data-key="X">X</button>
+                    <button class="key-btn" data-key="C">C</button>
+                    <button class="key-btn" data-key="V">V</button>
+                    <button class="key-btn" data-key="B">B</button>
+                    <button class="key-btn" data-key="N">N</button>
+                    <button class="key-btn" data-key="M">M</button>
+                    <button class="key-btn key-wide" data-key="BACKSPACE">⌫</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Columna 2: Horizontales -->
+        <section class="clues-column">
+            <h2>Horizontales</h2>
+            <ul class="clues-list" id="across-clues">
+                <!-- Se genera dinámicamente -->
+            </ul>
+        </section>
+
+        <!-- Columna 3: Verticales -->
+        <section class="clues-column">
+            <h2>Verticales</h2>
+            <ul class="clues-list" id="down-clues">
+                <!-- Se genera dinámicamente -->
+            </ul>
+        </section>
+    </main>
+
+    <!-- Modal de Victoria -->
+    <div class="modal-overlay hidden" id="victory-modal">
+        <div class="modal-card">
+            <div class="victory-icon">🎉</div>
+            <h2 id="victory-title">¡Desafío Completado!</h2>
+            <p>Has resuelto el crucigrama correctamente.</p>
+
+            <div id="record-badge" class="record-badge" style="display: none;">
+                🏆 ¡Nuevo Récord de Puntuación!
+            </div>
+
+            <div class="score-breakdown">
+                <div class="score-row">
+                    <span>Puntuación Base:</span>
+                    <strong id="victory-base-score">0</strong>
+                </div>
+                <div class="score-row">
+                    <span>Bonificación de Tiempo:</span>
+                    <strong id="victory-time-bonus">0</strong>
+                </div>
+                <div class="score-row">
+                    <span>Tiempo Empleado:</span>
+                    <strong id="victory-time">00:00</strong>
+                </div>
+                <div class="score-row total-row">
+                    <span>Puntuación Final:</span>
+                    <span id="victory-final-score">0</span>
+                </div>
+            </div>
+
+            <button id="btn-next-daily" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px;">
+                Continuar
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de Estadísticas / Récords -->
+    <div class="modal-overlay hidden" id="stats-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>🏆 Estadísticas y Récords</h2>
+                <button class="btn-close" id="btn-stats-close">&times;</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-num" id="stat-high-score">0</span>
+                    <span class="stat-label">Mejor Puntaje</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num" id="stat-best-time">--:--</span>
+                    <span class="stat-label">Mejor Tiempo</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num" id="stat-streak">0 días</span>
+                    <span class="stat-label">Racha Actual</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num" id="stat-games-won">0</span>
+                    <span class="stat-label">Retos Ganados</span>
+                </div>
+            </div>
+
+            <div class="history-box">
+                <h3>Historial de Desafíos</h3>
+                <ul id="stat-history-list">
+                    <!-- Se carga dinámicamente -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts de la Aplicación con Cache-Busting v2.3 -->
+    <script src="js/dictionary.js?v=2.3"></script>
+    <script src="js/generator.js?v=2.3"></script>
+    <script src="js/score.js?v=2.3"></script>
+    <script src="js/audio.js?v=2.3"></script>
+    <script src="js/game.js?v=2.3"></script>
+    <script src="js/app.js?v=2.3"></script>
+</body>
+</html>
